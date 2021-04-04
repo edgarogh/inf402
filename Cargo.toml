@@ -1,0 +1,7 @@
+[package]
+name = "inf402"
+version = "0.1.0"
+authors = ["edgar"]
+edition = "2018"
+
+[dependencies]
