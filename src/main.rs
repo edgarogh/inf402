@@ -1,3 +1,5 @@
+use std::env;
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum Cell {
     Filled(bool),
@@ -32,7 +34,22 @@ impl Grid {
 }
 
 fn main() {
-    println!("Hello, world!");
+    let args: Vec<String> = env::args().collect();
+
+    let (mode, filename) = match args.as_slice() {
+        [_, mode, filename] if mode == "sol" => (mode, filename),
+        [_, mode, filename] if mode == "cnf" => (mode, filename),
+        [_, mode, filename] => {
+            println!("Mode inconnu (sol ou cnf)");
+            return;
+        }
+        _ => {
+            println!("Mauvais nombre d'arguments");
+            return;
+        }
+    };
+
+    println!("Fichier entrée : {} avec le mode {}", filename, mode);
 }
 
 #[cfg(test)]
