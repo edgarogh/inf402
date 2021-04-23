@@ -44,21 +44,32 @@ fn main_sol(filepath: PathBuf) {
     dbg!(filepath);
 }
 
+/// exe: nom de l'exécutable pour le message d'aide
+fn help(exe: &str) {
+    eprintln!("Usage: `{0} sol <fichier.takuzu>` ou `{0} cnf <fichier.resultat>`", exe);
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    let _ = match args.as_slice() {
+    match args.as_slice() {
         [_, mode, filename] if mode == "sol" => main_sol(filename.into()),
         [_, mode, filename] if mode == "cnf" => main_cnf(filename.into()),
-        [_, _, _] => {
-            println!("Mode inconnu (sol ou cnf)");
+        [exe, _, _] => {
+            eprintln!("Mode inconnu.");
+            help(exe);
+            return;
+        }
+        [exe,] => {
+            eprintln!("Deux arguments attendus.");
+            help(exe);
             return;
         }
         _ => {
-            println!("Mauvais nombre d'arguments");
+            eprintln!("Deux arguments attendus.");
             return;
         }
-    };
+    }
 }
 
 #[cfg(test)]
