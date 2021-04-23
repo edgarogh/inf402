@@ -1,4 +1,5 @@
 use std::env;
+use std::path::PathBuf;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum Cell {
@@ -33,13 +34,23 @@ impl Grid {
     }
 }
 
+fn main_cnf(filepath: PathBuf) {
+    println!("Mode CNF");
+    dbg!(filepath);
+}
+
+fn main_sol(filepath: PathBuf) {
+    println!("Mode SOL");
+    dbg!(filepath);
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    let (mode, filename) = match args.as_slice() {
-        [_, mode, filename] if mode == "sol" => (mode, filename),
-        [_, mode, filename] if mode == "cnf" => (mode, filename),
-        [_, mode, filename] => {
+    let _ = match args.as_slice() {
+        [_, mode, filename] if mode == "sol" => main_sol(filename.into()),
+        [_, mode, filename] if mode == "cnf" => main_cnf(filename.into()),
+        [_, _, _] => {
             println!("Mode inconnu (sol ou cnf)");
             return;
         }
@@ -48,8 +59,6 @@ fn main() {
             return;
         }
     };
-
-    println!("Fichier entrée : {} avec le mode {}", filename, mode);
 }
 
 #[cfg(test)]
