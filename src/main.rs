@@ -46,7 +46,10 @@ fn main_sol(filepath: PathBuf) {
 
 /// exe: nom de l'exécutable pour le message d'aide
 fn help(exe: &str) {
-    eprintln!("Usage: `{0} sol <fichier.takuzu>` ou `{0} cnf <fichier.resultat>`", exe);
+    eprintln!(
+        "Usage: `{0} sol <fichier.takuzu>` ou `{0} cnf <fichier.resultat>`",
+        exe,
+    );
 }
 
 fn main() {
@@ -60,7 +63,7 @@ fn main() {
             help(exe);
             return;
         }
-        [exe,] => {
+        [exe] => {
             eprintln!("Deux arguments attendus.");
             help(exe);
             return;
