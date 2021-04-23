@@ -32,6 +32,20 @@ impl Grid {
         let i = y * self.size + x;
         self.inner[i] = Cell::Filled(value);
     }
+
+    fn print(&self) {
+        for y in 0..self.size {
+            for x in 0..self.size {
+                let c = self.get(x, y);
+                match c {
+                    Cell::Filled(true) => print!("1"),
+                    Cell::Filled(false) => print!("0"),
+                    Cell::Empty => print!("."),
+                }
+            }
+            println!();
+        }
+    }
 }
 
 fn main_cnf(filepath: PathBuf) {
