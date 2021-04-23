@@ -2,19 +2,19 @@ use std::env;
 use std::path::PathBuf;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum Cell {
+pub enum Cell {
     Filled(bool),
     Empty,
 }
 
 #[derive(Clone, Debug)]
-struct Grid {
+pub struct Grid {
     size: usize,
     inner: Vec<Cell>,
 }
 
 impl Grid {
-    fn new(size: usize) -> Self {
+    pub fn new(size: usize) -> Self {
         assert_eq!(size % 2, 0);
 
         Grid {
@@ -23,17 +23,17 @@ impl Grid {
         }
     }
 
-    fn get(&self, x: usize, y: usize) -> Cell {
+    pub fn get(&self, x: usize, y: usize) -> Cell {
         let i = y * self.size + x;
         self.inner[i]
     }
 
-    fn set(&mut self, x: usize, y: usize, value: bool) {
+    pub fn set(&mut self, x: usize, y: usize, value: bool) {
         let i = y * self.size + x;
         self.inner[i] = Cell::Filled(value);
     }
 
-    fn print(&self) {
+    pub fn print(&self) {
         for y in 0..self.size {
             for x in 0..self.size {
                 let c = self.get(x, y);
