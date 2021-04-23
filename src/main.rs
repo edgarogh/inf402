@@ -1,3 +1,6 @@
+use std::env;
+use std::path::PathBuf;
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum Cell {
     Filled(bool),
@@ -31,8 +34,45 @@ impl Grid {
     }
 }
 
+fn main_cnf(filepath: PathBuf) {
+    println!("Mode CNF");
+    dbg!(filepath);
+}
+
+fn main_sol(filepath: PathBuf) {
+    println!("Mode SOL");
+    dbg!(filepath);
+}
+
+/// exe: nom de l'exécutable pour le message d'aide
+fn help(exe: &str) {
+    eprintln!(
+        "Usage: `{0} sol <fichier.takuzu>` ou `{0} cnf <fichier.resultat>`",
+        exe,
+    );
+}
+
 fn main() {
-    println!("Hello, world!");
+    let args: Vec<String> = env::args().collect();
+
+    match args.as_slice() {
+        [_, mode, filename] if mode == "sol" => main_sol(filename.into()),
+        [_, mode, filename] if mode == "cnf" => main_cnf(filename.into()),
+        [exe, _, _] => {
+            eprintln!("Mode inconnu.");
+            help(exe);
+            return;
+        }
+        [exe] => {
+            eprintln!("Deux arguments attendus.");
+            help(exe);
+            return;
+        }
+        _ => {
+            eprintln!("Deux arguments attendus.");
+            return;
+        }
+    }
 }
 
 #[cfg(test)]
