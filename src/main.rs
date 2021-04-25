@@ -5,6 +5,7 @@ use std::convert::TryFrom;
 use std::env;
 use std::fs::File;
 use std::path::PathBuf;
+mod grid_read;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Cell {
@@ -89,7 +90,14 @@ impl TryFrom<Vec<Cell>> for Grid {
 
 fn main_cnf(filepath: PathBuf) {
     println!("Mode CNF");
-    dbg!(filepath);
+    let content: String = grid_read::file_read(filepath);
+    let grid_size: usize = grid_read::size(&content)
+        .trim()
+        .parse()
+        .expect("Taille incorrecte dans le fichier");
+
+    let mut grid: Grid = Grid::new(grid_size);
+    grid_read::fill_grid_from_file(&mut grid, &content);
 }
 
 fn main_sol(filepath: PathBuf) {
