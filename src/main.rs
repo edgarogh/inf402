@@ -1,6 +1,9 @@
 use std::env;
 use std::path::PathBuf;
 
+mod grid_read;
+use grid_read::*;
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum Cell {
     Filled(bool),
@@ -8,7 +11,7 @@ enum Cell {
 }
 
 #[derive(Clone, Debug)]
-struct Grid {
+pub struct Grid {
     size: usize,
     inner: Vec<Cell>,
 }
@@ -36,7 +39,13 @@ impl Grid {
 
 fn main_cnf(filepath: PathBuf) {
     println!("Mode CNF");
-    dbg!(filepath);
+    let content: String = file_read(filepath);
+    let grid_size: usize = size(&content)
+        .trim()
+        .parse()
+        .expect("Taille incorrecte dans le fichier");
+    let mut grid: Grid = Grid::new(grid_size);
+    fill_grid_from_file(&mut grid, &content);
 }
 
 fn main_sol(filepath: PathBuf) {
