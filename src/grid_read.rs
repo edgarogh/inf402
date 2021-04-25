@@ -1,3 +1,4 @@
+use crate::Cell;
 use crate::Grid;
 use std::fs;
 use std::path::PathBuf;
@@ -41,5 +42,27 @@ pub fn fill_grid_from_file(grid: &mut Grid, content: &str) {
                 x = 0;
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const BASIC: &str = "2\n01\n11\n";
+
+    #[test]
+    fn basic() {
+        let grid = {
+            let mut grid = Grid::new(size(BASIC).parse().unwrap());
+            fill_grid_from_file(&mut grid, BASIC);
+            grid
+        };
+
+        assert_eq!(grid.size, 2);
+        assert_eq!(grid.get(0, 0), Cell::Filled(false));
+        assert_eq!(grid.get(0, 1), Cell::Filled(true));
+        assert_eq!(grid.get(1, 0), Cell::Filled(true));
+        assert_eq!(grid.get(1, 1), Cell::Filled(true));
     }
 }
