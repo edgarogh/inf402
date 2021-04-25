@@ -1,4 +1,9 @@
+mod cnf;
+mod sat;
+
+use std::convert::TryFrom;
 use std::env;
+use std::fs::File;
 use std::path::PathBuf;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -15,6 +20,7 @@ pub struct Grid {
 
 impl Grid {
     pub fn new(size: usize) -> Self {
+        assert_ne!(size, 0);
         assert_eq!(size % 2, 0);
 
         Grid {
@@ -48,14 +54,50 @@ impl Grid {
     }
 }
 
+/// Construit une grille à partir d'une liste de cellules, de façon safe (vérification de la taille)
+impl TryFrom<Vec<Cell>> for Grid {
+    type Error = ();
+
+    fn try_from(value: Vec<Cell>) -> Result<Self, Self::Error> {
+        /// Racine carrée entière "stricte", renvoie `None` si le nombre n'en a pas
+        fn int_sqrt(n: usize) -> Option<usize> {
+            match n {
+                // Les premiers cas sont là pour des raisons de performance
+                4 => Some(2),
+                16 => Some(4),
+                36 => Some(6),
+                64 => Some(8),
+                // Cas général, recourt à des flottants
+                n => {
+                    let sqrt = (n as f64).sqrt() as usize;
+                    if sqrt.pow(2) == n {
+                        Some(sqrt)
+                    } else {
+                        None
+                    }
+                }
+            }
+        }
+
+        if let Some(size) = int_sqrt(value.len()) {
+            Ok(Grid { size, inner: value })
+        } else {
+            Err(())
+        }
+    }
+}
+
 fn main_cnf(filepath: PathBuf) {
     println!("Mode CNF");
     dbg!(filepath);
 }
 
 fn main_sol(filepath: PathBuf) {
-    println!("Mode SOL");
-    dbg!(filepath);
+    println!("lecture du fichier de résultats: {:?}", filepath);
+    let file = std::io::BufReader::new(File::open(filepath).unwrap());
+    let grid = sat::read_sat_file(file).unwrap();
+    println!("grille: ");
+    grid.print();
 }
 
 /// exe: nom de l'exécutable pour le message d'aide
