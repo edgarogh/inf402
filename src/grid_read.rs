@@ -1,15 +1,14 @@
+use crate::Grid;
 use std::fs;
 use std::path::PathBuf;
-
-use crate::Grid;
 
 pub fn file_read(filepath: PathBuf) -> String {
     let content = fs::read_to_string(filepath).expect("Problème lors de la lecture de la grille");
     content
 }
 
-pub fn size(content: &String) -> &str {
-    let bytes = &content.as_bytes();
+pub fn size(content: &str) -> &str {
+    let bytes = content.as_bytes();
 
     for (i, &element) in bytes.iter().enumerate() {
         if element == b'\n' {
@@ -19,21 +18,21 @@ pub fn size(content: &String) -> &str {
     panic!("Fichier incorrect : size");
 }
 
-pub fn fill_grid_from_file(grid: &mut Grid, content: &String) {
-    let bytes = &content.as_bytes();
-    let mut x: usize = 0;
-    let mut y: usize = 0;
-    let mut s: bool = false;
+pub fn fill_grid_from_file(grid: &mut Grid, content: &str) {
+    let bytes = content.as_bytes();
+    let mut x = 0;
+    let mut y = 0;
+    let mut s = false;
 
-    for (_i, &element) in bytes.iter().enumerate() {
+    for &element in bytes.iter() {
         if element == b'\n' {
             if s == false {
                 s = true;
             }
         } else if s {
-            if element == 49 {
+            if element == b'1' {
                 grid.set(x, y, true);
-            } else if element == 48 {
+            } else if element == b'0' {
                 grid.set(x, y, false);
             }
             x += 1;
