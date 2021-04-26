@@ -1,11 +1,14 @@
 mod cnf;
+mod grid_read;
+mod rules;
 mod sat;
 
+use crate::cnf::CNFFile;
 use std::convert::TryFrom;
 use std::env;
 use std::fs::File;
+use std::io::BufWriter;
 use std::path::PathBuf;
-mod grid_read;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Cell {
@@ -89,7 +92,7 @@ impl TryFrom<Vec<Cell>> for Grid {
 }
 
 fn main_cnf(filepath: PathBuf) {
-    println!("Mode CNF");
+    eprintln!("lecture de la grille {:?}", filepath);
     let content: String = grid_read::file_read(filepath);
     let grid_size: usize = grid_read::size(&content)
         .trim()
@@ -98,13 +101,18 @@ fn main_cnf(filepath: PathBuf) {
 
     let mut grid: Grid = Grid::new(grid_size);
     grid_read::fill_grid_from_file(&mut grid, &content);
+
+    let stdout = std::io::stdout();
+    let mut output = CNFFile::new(&grid, BufWriter::new(stdout.lock()));
+    rules::write_all(&mut output, &grid);
+    output.save().unwrap();
 }
 
 fn main_sol(filepath: PathBuf) {
-    println!("lecture du fichier de résultats: {:?}", filepath);
+    eprintln!("lecture du fichier de résultats: {:?}", filepath);
     let file = std::io::BufReader::new(File::open(filepath).unwrap());
     let grid = sat::read_sat_file(file).unwrap();
-    println!("grille: ");
+    eprintln!("grille: ");
     grid.print();
 }
 
