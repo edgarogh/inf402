@@ -31,6 +31,9 @@ jobs:
         override: true
     - name: Run tests with coverage
       run: cargo test
+    - uses: actions-rs/install@v0.1
+      with:
+        crate: grcov
     - uses: actions-rs/grcov@v0.1
     - uses: coverallsapp/github-action@master
       with:
