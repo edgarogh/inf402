@@ -34,12 +34,15 @@ jobs:
     - uses: actions-rs/install@v0.1
       with:
         crate: grcov
+        use-tool-cache: true
     - uses: actions-rs/grcov@v0.1
+      with:
+        report: ./lcov.info
     - uses: coverallsapp/github-action@master
       with:
         flag-name: "Unit"
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ${{ steps.coverage.outputs.report }}
+        path-to-lcov: ./lcov.info
   fmt:
     runs-on: ubuntu-latest
     steps:
