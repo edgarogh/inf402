@@ -16,8 +16,12 @@ pub struct Literal {
 }
 
 impl Literal {
-    pub fn new(x: usize, y: usize, negated: bool) -> Self {
-        Self { x, y, negated }
+    pub fn new(x: usize, y: usize, positive: bool) -> Self {
+        Self {
+            x,
+            y,
+            negated: !positive,
+        }
     }
 
     fn into_numeric(self, grid_size: usize) -> NonZeroIsize {
@@ -48,6 +52,12 @@ pub struct CNFFile<F = BufWriter<File>> {
     clauses: Vec<Vec<Literal>>,
 }
 
+impl<F> CNFFile<F> {
+    pub fn push(&mut self, clause: Vec<Literal>) {
+        self.clauses.push(clause);
+    }
+}
+
 impl<F: Write> CNFFile<F> {
     pub fn new(grid: &Grid, writer: F) -> Self {
         Self {
@@ -55,10 +65,6 @@ impl<F: Write> CNFFile<F> {
             writer: Some(writer),
             clauses: Vec::new(),
         }
-    }
-
-    pub fn push(&mut self, clause: Vec<Literal>) {
-        self.clauses.push(clause);
     }
 
     /// Enregistre le fichier CNF, détruit le `CNFFile` et renvoie le `Write` interieur
@@ -112,8 +118,8 @@ mod tests {
             Vec::new(),
         );
 
-        cnf.push(vec![Literal::new(0, 1, false), Literal::new(1, 1, true)]);
-        cnf.push(vec![Literal::new(0, 0, false), Literal::new(1, 1, false)]);
+        cnf.push(vec![Literal::new(0, 1, true), Literal::new(1, 1, false)]);
+        cnf.push(vec![Literal::new(0, 0, true), Literal::new(1, 1, true)]);
 
         let out = String::from_utf8(cnf.save().unwrap()).unwrap();
 
