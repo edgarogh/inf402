@@ -18,6 +18,27 @@ jobs:
       run: cargo build --verbose
     - name: Run tests
       run: cargo test --verbose
+  cov:
+    runs-on: ubuntu-latest
+    env:
+      CARGO_INCREMENTAL: "0"
+      RUSTFLAGS: "-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort"
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+        override: true
+    - name: Run tests with coverage
+      run: cargo test
+    - name: install grcov
+      run: wget "https://github.com/mozilla/grcov/releases/download/v0.8.0/grcov-linux-x86_64.tar.bz2" && sudo tar -xf grcov*.tar.bz2 --directory /bin/
+    - uses: actions-rs/grcov@v0.1
+    - uses: coverallsapp/github-action@master
+      with:
+        flag-name: "Unit"
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: /home/runner/work/inf402/inf402/lcov.info
   fmt:
     runs-on: ubuntu-latest
     steps:
