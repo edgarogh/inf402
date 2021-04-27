@@ -38,7 +38,7 @@ jobs:
       with:
         flag-name: "Unit"
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ${{ steps.coverage.outputs.report }}
+        path-to-lcov: /home/runner/work/inf402/inf402/lcov.info
   fmt:
     runs-on: ubuntu-latest
     steps:
