@@ -1,1 +1,7 @@
+![GitHub top language](https://img.shields.io/github/languages/top/edgarogh/inf402)
+![Lines of code](https://img.shields.io/tokei/lines/github/edgarogh/inf402)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/edgarogh/inf402)](https://github.com/edgarogh/inf402/pulls)
+[![GitHub issues](https://img.shields.io/github/issues/edgarogh/inf402)](https://github.com/edgarogh/inf402/issues)
 [![Coverage Status](https://coveralls.io/repos/github/edgarogh/inf402/badge.svg?branch=main)](https://coveralls.io/github/edgarogh/inf402?branch=main)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/edgarogh/inf402/Rust)
+![Rappel important](https://img.shields.io/badge/aller%20le-foot-white?cacheSeconds=1000000)
