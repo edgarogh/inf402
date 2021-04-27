@@ -31,12 +31,9 @@ jobs:
         override: true
     - name: Run tests with coverage
       run: cargo build && cargo test
-    - uses: actions-rs/install@v0.1
-      with:
-        crate: grcov
-        use-tool-cache: true
+    - name: install grcov
+      run: wget "https://github.com/mozilla/grcov/releases/download/v0.5.5/grcov-linux-x86_64.tar.bz2" && sudo tar -xf grcov*.tar.bz2 --directory /bin/
     - uses: actions-rs/grcov@v0.1
-    - run: ls -R /tmp/grcov-report-*
     - uses: coverallsapp/github-action@master
       with:
         flag-name: "Unit"
