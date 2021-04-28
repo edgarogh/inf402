@@ -1,4 +1,5 @@
 use crate::cnf::{CNFFile, Literal};
+use crate::logic_utils;
 use crate::Grid;
 
 pub fn combinaisons(nb_true: usize, size: usize) -> Vec<Vec<bool>> {
