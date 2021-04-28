@@ -28,7 +28,7 @@ jobs:
     - name: install tarpaulin
       run: wget "https://github.com/xd009642/tarpaulin/releases/download/0.18.0-alpha2/cargo-tarpaulin-0.18.0-alpha2-travis.tar.gz" && sudo tar -xf cargo-tarpaulin*.tar.gz
     - name: run tarpaulin
-      run: ./cargo-tarpaulin -o Lcov
+      run: ./cargo-tarpaulin tarpaulin -o Lcov
     - uses: coverallsapp/github-action@master
       with:
         flag-name: "Unit"
