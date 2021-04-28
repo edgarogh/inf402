@@ -1,9 +1,28 @@
 use crate::cnf::{CNFFile, Literal};
 use crate::Grid;
 
-pub fn write_rule_1<W>(out: &mut CNFFile<W>, grid: &Grid) {
-    // TODO
+pub fn combinaisons(nb_true: usize, size: usize) -> Vec<Vec<bool>> {
+    if nb_true == size {
+        return vec![vec![true; size as usize]];
+    }
+    if nb_true == 0 {
+        return vec![vec![false; size as usize]];
+    }
+    let mut ret = Vec::new();
+    for combinaison in combinaisons(nb_true, size - 1) {
+        let mut nouvelle_combinaison = combinaison.clone();
+        nouvelle_combinaison.push(false);
+        ret.push(nouvelle_combinaison);
+    }
+    for combinaison in combinaisons(nb_true - 1, size - 1) {
+        let mut nouvelle_combinaison = combinaison.clone();
+        nouvelle_combinaison.push(true);
+        ret.push(nouvelle_combinaison);
+    }
+    return ret;
 }
+
+pub fn write_rule_1<W>(out: &mut CNFFile<W>, grid: &Grid) {}
 
 pub fn write_rule_2<W>(out: &mut CNFFile<W>, grid: &Grid) {
     // TODO

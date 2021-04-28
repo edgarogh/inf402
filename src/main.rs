@@ -150,6 +150,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::rules::combinaisons;
 
     #[test]
     fn grid_get_set() {
@@ -159,5 +160,7 @@ mod tests {
         assert_eq!(g.get(0, 1), Cell::Filled(true));
         assert_eq!(g.get(0, 0), Cell::Filled(false));
         assert_eq!(g.get(0, 0), Cell::Filled(false));
+        let ret = combinaisons(2, 4);
+        println!("{:?}", ret);
     }
 }
