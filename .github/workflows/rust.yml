@@ -27,7 +27,7 @@ jobs:
     - uses: actions/checkout@v2
     - uses: actions-rs/toolchain@v1
       with:
-        toolchain: stable
+        toolchain: nightly
         override: true
     - name: install tarpaulin
       run: wget "https://github.com/xd009642/tarpaulin/releases/download/0.18.0-alpha2/cargo-tarpaulin-0.18.0-alpha2-travis.tar.gz" && tar -xf cargo-tarpaulin*.tar.gz --directory ~/.cargo/bin/
