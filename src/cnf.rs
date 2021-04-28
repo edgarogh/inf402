@@ -6,7 +6,7 @@ use std::io::{BufWriter, Write};
 use std::num::{NonZeroIsize, NonZeroUsize};
 
 /// Takuzu-focused literal representation, using actual coordinates
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct Literal {
     x: usize,
     y: usize,

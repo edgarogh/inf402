@@ -1,4 +1,5 @@
 use crate::cnf::{CNFFile, Literal};
+use crate::logic_utils;
 use crate::Grid;
 
 pub fn write_rule_1<W>(out: &mut CNFFile<W>, grid: &Grid) {
