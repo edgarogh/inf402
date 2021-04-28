@@ -1,5 +1,6 @@
 mod cnf;
 mod grid_read;
+mod logic_utils;
 mod rules;
 mod sat;
 
