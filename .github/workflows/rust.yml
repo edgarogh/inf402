@@ -27,7 +27,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: install tarpaulin
       run: wget "https://github.com/xd009642/tarpaulin/releases/download/0.18.0-alpha2/cargo-tarpaulin-0.18.0-alpha2-travis.tar.gz" && sudo tar -xf cargo-tarpaulin*.tar.xz
-    - uses: run tarpaulin
+    - name: run tarpaulin
       run: ./cargo-tarpaulin -o Lcov
     - uses: coverallsapp/github-action@master
       with:
