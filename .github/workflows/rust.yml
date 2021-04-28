@@ -25,6 +25,10 @@ jobs:
       RUSTFLAGS: "-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort"
     steps:
     - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
     - name: install tarpaulin
       run: wget "https://github.com/xd009642/tarpaulin/releases/download/0.18.0-alpha2/cargo-tarpaulin-0.18.0-alpha2-travis.tar.gz" && tar -xf cargo-tarpaulin*.tar.gz --directory ~/.cargo/bin/
     - name: run tarpaulin
