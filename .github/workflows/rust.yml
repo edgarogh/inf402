@@ -30,7 +30,7 @@ jobs:
         toolchain: nightly
         override: true
     - name: install tarpaulin
-      run: wget "https://github.com/xd009642/tarpaulin/releases/download/0.18.0-alpha2/cargo-tarpaulin-0.18.0-alpha2-travis.tar.gz" && tar -xf cargo-tarpaulin*.tar.gz --directory ~/.cargo/bin/
+      run: cargo install cargo-tarpaulin
     - name: run tarpaulin
       run: cargo tarpaulin -o Lcov
     - uses: coverallsapp/github-action@master
