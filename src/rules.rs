@@ -32,7 +32,7 @@ pub fn combinations(nb_true: usize, size: usize) -> Vec<Vec<bool>> {
 }
 
 pub fn write_rule_1<W>(out: &mut CNFFile<W>, grid: &Grid) {
-    let combinations = combinaisons(grid.size / 2, grid.size);
+    let combinations = combinations(grid.size / 2, grid.size);
 
     for a in 0..grid.size {
         let line_combinations: Vec<Vec<_>> = combinations
