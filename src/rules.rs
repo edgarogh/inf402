@@ -1,6 +1,8 @@
 use crate::cnf::{CNFFile, Literal};
 use crate::logic_utils;
+use crate::logic_utils::dnf_to_cnf;
 use crate::Grid;
+use std::time::Instant;
 
 pub fn write_rule_1<W>(out: &mut CNFFile<W>, grid: &Grid) {
     // TODO
@@ -23,15 +25,82 @@ fn pairs<T>(slice: &[T]) -> impl Iterator<Item = (&T, &T)> {
 }
 
 pub fn write_rule_3<W>(out: &mut CNFFile<W>, grid: &Grid) {
-    // exemple:
-    out.push(vec![Literal::new(0, 1, true)])
-    // TODO
+    #[derive(Clone, Copy, Eq, PartialEq, Hash)]
+    enum ParamLiteral {
+        A(usize, bool),
+        B(usize, bool),
+    }
+
+    // « Une ligne/colonne A est différente d'une ligne/colonne B » en FND (paramétrique)
+    let diff_a_b_dnf = (0..grid.size)
+        .map(|z| {
+            vec![
+                [ParamLiteral::A(z, true), ParamLiteral::B(z, false)],
+                [ParamLiteral::A(z, false), ParamLiteral::B(z, true)],
+            ]
+        })
+        .flatten()
+        .collect::<Box<[_]>>();
+
+    // ... en FNC
+    eprint!("| starting expansion...");
+    let instant_exp = Instant::now();
+    let diff_a_b_cnf = dnf_to_cnf(&diff_a_b_dnf.iter().map(|s| &s[..]).collect::<Vec<_>>()[..]);
+    eprintln!(
+        " DONE ({:?}) ({} clauses)",
+        instant_exp.elapsed(),
+        diff_a_b_cnf.len(),
+    );
+
+    // Liste des nombre de 0 à grid.size
+    let indices = (0..grid.size).collect::<Box<[_]>>();
+
+    // On s'occupe des listes et des colonnes dans la boucle for, puisque les paires sont les mêmes
+    let instant_sub = Instant::now();
+    let pair_count = (indices.len() * (indices.len() - 1)) / 2;
+    for (idx, (a, b)) in pairs(&indices).enumerate() {
+        let (a, b) = (*a, *b);
+
+        eprint!("\r| substituting and writing... {}/{}", idx, pair_count);
+
+        // Assignation de la forme paramétrique `diff_a_b_cnf` aux lignes
+        let mut diff_cnf_l = diff_a_b_cnf.iter().map(|clause| {
+            clause
+                .iter()
+                .map(|lit| match *lit {
+                    ParamLiteral::A(x, neg) => Literal::new(x, a, neg),
+                    ParamLiteral::B(x, neg) => Literal::new(x, b, neg),
+                })
+                .collect::<Vec<_>>()
+        });
+
+        // Assignation de la forme paramétrique `diff_a_b_cnf` aux colonnes
+        let mut diff_cnf_h = diff_a_b_cnf.iter().map(|clause| {
+            clause
+                .iter()
+                .map(|lit| match *lit {
+                    ParamLiteral::A(y, neg) => Literal::new(a, y, neg),
+                    ParamLiteral::B(y, neg) => Literal::new(b, y, neg),
+                })
+                .collect::<Vec<_>>()
+        });
+
+        out.push_multiple(diff_cnf_l.chain(diff_cnf_h));
+    }
+    eprintln!(
+        "\r| substituting and writing... DONE ({:?})",
+        instant_sub.elapsed()
+    );
 }
 
 pub fn write_all<W>(out: &mut CNFFile<W>, grid: &Grid) {
     write_rule_1(out, grid);
     write_rule_2(out, grid);
+
+    eprintln!("[rule 3] starting rule");
+    let instant_r3 = Instant::now();
     write_rule_3(out, grid);
+    eprintln!("\\ DONE ({:?})", instant_r3.elapsed());
 }
 
 #[cfg(test)]
