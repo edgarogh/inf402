@@ -27,7 +27,6 @@ pub fn combinaisons(nb_true: usize, size: usize) -> Vec<Vec<bool>> {
 
 pub fn write_rule_1<W>(out: &mut CNFFile<W>, grid: &Grid) {
     let combinaisons = combinaisons(grid.size / 2, grid.size);
-    println!("{:?}", combinaisons);
 
     for a in 0..grid.size {
         let ligne_combinaisons: Vec<Vec<_>> = combinaisons
@@ -45,8 +44,6 @@ pub fn write_rule_1<W>(out: &mut CNFFile<W>, grid: &Grid) {
             .iter()
             .map(|sous_vec| &sous_vec[..])
             .collect();
-
-        println!("{:?}", ligne_combinaisons_slice);
 
         for clause in dnf_to_cnf(&ligne_combinaisons_slice[..]) {
             out.push(Vec::from_iter(clause));
