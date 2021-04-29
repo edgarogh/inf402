@@ -4,35 +4,40 @@ use crate::Grid;
 use std::iter::FromIterator;
 
 /// Determine l'ensemble des combinaisons possible dans une ligne/colonne pour *nb_true*
-pub fn combinaisons(nb_true: usize, size: usize) -> Vec<Vec<bool>> {
+pub fn combinations(nb_true: usize, size: usize) -> Vec<Vec<bool>> {
     if nb_true == size {
         return vec![vec![true; size as usize]];
     }
+
     if nb_true == 0 {
         return vec![vec![false; size as usize]];
     }
+
     let mut ret = Vec::new();
-    for combinaison in combinaisons(nb_true, size - 1) {
-        let mut nouvelle_combinaison = combinaison.clone();
-        nouvelle_combinaison.push(false);
-        ret.push(nouvelle_combinaison);
+
+    for combination in combinations(nb_true, size - 1) {
+        let mut new_combination = combination.clone();
+        new_combination.push(false);
+        ret.push(new_combination);
     }
-    for combinaison in combinaisons(nb_true - 1, size - 1) {
-        let mut nouvelle_combinaison = combinaison.clone();
-        nouvelle_combinaison.push(true);
-        ret.push(nouvelle_combinaison);
+
+    for combination in combinations(nb_true - 1, size - 1) {
+        let mut new_combination = combination.clone();
+        new_combination.push(true);
+        ret.push(new_combination);
     }
+
     return ret;
 }
 
 pub fn write_rule_1<W>(out: &mut CNFFile<W>, grid: &Grid) {
-    let combinaisons = combinaisons(grid.size / 2, grid.size);
+    let combinations = combinaisons(grid.size / 2, grid.size);
 
     for a in 0..grid.size {
-        let ligne_combinaisons: Vec<Vec<_>> = combinaisons
+        let line_combinations: Vec<Vec<_>> = combinations
             .iter()
-            .map(|combinaison| {
-                combinaison
+            .map(|combinations| {
+                combinations
                     .iter()
                     .enumerate()
                     .map(|(x, vf)| Literal::new(x, a, *vf))
@@ -40,18 +45,18 @@ pub fn write_rule_1<W>(out: &mut CNFFile<W>, grid: &Grid) {
             })
             .collect();
 
-        let ligne_combinaisons_slice: Vec<_> = ligne_combinaisons
+        let line_combinations_slice: Vec<_> = line_combinations
             .iter()
-            .map(|sous_vec| &sous_vec[..])
+            .map(|combination| &combination[..])
             .collect();
 
-        for clause in dnf_to_cnf(&ligne_combinaisons_slice[..]) {
+        for clause in dnf_to_cnf(&line_combinations_slice[..]) {
             out.push(Vec::from_iter(clause));
         }
-        let colonne_combinaisons: Vec<Vec<_>> = combinaisons
+        let column_combinations: Vec<Vec<_>> = combinations
             .iter()
-            .map(|combinaison| {
-                combinaison
+            .map(|combination| {
+                combination
                     .iter()
                     .enumerate()
                     .map(|(y, vf)| Literal::new(a, y, *vf))
@@ -59,12 +64,12 @@ pub fn write_rule_1<W>(out: &mut CNFFile<W>, grid: &Grid) {
             })
             .collect();
 
-        let colonne_combinaisons_slice: Vec<_> = colonne_combinaisons
+        let column_combinations_slice: Vec<_> = column_combinations
             .iter()
-            .map(|sous_vec| &sous_vec[..])
+            .map(|combination| &combination[..])
             .collect();
 
-        for clause in dnf_to_cnf(&colonne_combinaisons_slice[..]) {
+        for clause in dnf_to_cnf(&column_combinations_slice[..]) {
             out.push(Vec::from_iter(clause));
         }
     }
