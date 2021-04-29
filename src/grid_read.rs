@@ -1,4 +1,3 @@
-use crate::Cell;
 use crate::Grid;
 use std::fs;
 use std::path::PathBuf;
