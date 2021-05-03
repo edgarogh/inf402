@@ -1,77 +1,75 @@
 use crate::cnf::{CNFFile, Literal};
 use crate::logic_utils::dnf_to_cnf;
 use crate::Grid;
-use std::iter::FromIterator;
 use std::time::Instant;
 
-/// Determine l'ensemble des combinaisons possible dans une ligne/colonne pour *nb_true*
-pub fn combinations(nb_true: usize, size: usize) -> Vec<Vec<bool>> {
-    if nb_true == size {
-        return vec![vec![true; size as usize]];
+/// Credits: https://docs.python.org/3.9/library/itertools.html#itertools.combinations
+fn combinations<T>(list: &[T], r: usize) -> Vec<Vec<&T>> {
+    let n = list.len();
+    if r > n {
+        return Vec::new();
     }
 
-    if nb_true == 0 {
-        return vec![vec![false; size as usize]];
+    let mut ret: Vec<Vec<&T>> = Vec::new();
+
+    ret.push(list[..r].into_iter().collect());
+    let mut indices: Vec<_> = (0..r).collect();
+
+    loop {
+        let mut broken = None;
+
+        for i in (0..r).rev() {
+            if indices[i] != i + n - r {
+                broken = Some(i);
+                break;
+            }
+        }
+
+        let i = if let Some(i) = broken {
+            i
+        } else {
+            return ret;
+        };
+
+        indices[i] += 1;
+
+        for j in (i + 1)..r {
+            indices[j] = indices[j - 1] + 1
+        }
+
+        ret.push(indices.iter().map(|i| &list[*i]).collect())
     }
-
-    let mut ret = Vec::new();
-
-    for combination in combinations(nb_true, size - 1) {
-        let mut new_combination = combination.clone();
-        new_combination.push(false);
-        ret.push(new_combination);
-    }
-
-    for combination in combinations(nb_true - 1, size - 1) {
-        let mut new_combination = combination.clone();
-        new_combination.push(true);
-        ret.push(new_combination);
-    }
-
-    return ret;
 }
 
 pub fn write_rule_1<W>(out: &mut CNFFile<W>, grid: &Grid) {
-    let combinations = combinations(grid.size / 2, grid.size);
+    for k in 0..grid.size {
+        let row_or_line: Vec<_> = std::iter::repeat(k).enumerate().take(grid.size).collect();
 
-    for a in 0..grid.size {
-        let line_combinations: Vec<Vec<_>> = combinations
-            .iter()
-            .map(|combinations| {
-                combinations
-                    .iter()
-                    .enumerate()
-                    .map(|(x, vf)| Literal::new(x, a, *vf))
-                    .collect()
-            })
-            .collect();
-
-        let line_combinations_slice: Vec<_> = line_combinations
-            .iter()
-            .map(|combination| &combination[..])
-            .collect();
-
-        for clause in dnf_to_cnf(&line_combinations_slice[..]) {
-            out.push(Vec::from_iter(clause));
-        }
-        let column_combinations: Vec<Vec<_>> = combinations
-            .iter()
-            .map(|combination| {
+        for combination in combinations(&row_or_line, grid.size / 2 + 1) {
+            out.push(
                 combination
                     .iter()
-                    .enumerate()
-                    .map(|(y, vf)| Literal::new(a, y, *vf))
-                    .collect()
-            })
-            .collect();
-
-        let column_combinations_slice: Vec<_> = column_combinations
-            .iter()
-            .map(|combination| &combination[..])
-            .collect();
-
-        for clause in dnf_to_cnf(&column_combinations_slice[..]) {
-            out.push(Vec::from_iter(clause));
+                    .map(|(k, l)| Literal::new(*k, *l, true))
+                    .collect(),
+            );
+            out.push(
+                combination
+                    .iter()
+                    .map(|(k, l)| Literal::new(*k, *l, false))
+                    .collect(),
+            );
+            out.push(
+                combination
+                    .iter()
+                    .map(|(k, l)| Literal::new(*l, *k, true))
+                    .collect(),
+            );
+            out.push(
+                combination
+                    .iter()
+                    .map(|(k, l)| Literal::new(*l, *k, false))
+                    .collect(),
+            );
         }
     }
 }
@@ -189,13 +187,16 @@ pub fn write_rule_3<W>(out: &mut CNFFile<W>, grid: &Grid) {
 }
 
 pub fn write_all<W>(out: &mut CNFFile<W>, grid: &Grid) {
-    write_rule_1(out, grid);
-    write_rule_2(out, grid);
+    let mut run_rule = |rule: fn(&mut CNFFile<W>, &Grid), no: u8| {
+        eprintln!("[rule {}] starting rule", no);
+        let start = Instant::now();
+        rule(out, grid);
+        eprintln!("\\ DONE ({:?})", start.elapsed());
+    };
 
-    eprintln!("[rule 3] starting rule");
-    let instant_r3 = Instant::now();
-    write_rule_3(out, grid);
-    eprintln!("\\ DONE ({:?})", instant_r3.elapsed());
+    run_rule(write_rule_1, 1);
+    run_rule(write_rule_2, 2);
+    run_rule(write_rule_3, 3);
 }
 
 #[cfg(test)]
@@ -222,5 +223,11 @@ mod tests {
                 pairs,
             );
         }
+    }
+
+    #[test]
+    fn combinations_test() {
+        // eprintln!("{:#?}", combinations(4, 8));
+        eprintln!("{:#?}", combinations(&['A', 'B', 'C', 'D'], 2));
     }
 }

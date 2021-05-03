@@ -46,6 +46,19 @@ impl Display for Literal {
     }
 }
 
+impl Grid {
+    pub fn to_literals(&self) -> HashSet<Literal> {
+        self.inner
+            .iter()
+            .enumerate()
+            .filter_map(|(index, cell)| match *cell {
+                Cell::Empty => None,
+                Cell::Filled(p) => Some(Literal::new(index % self.size, index / self.size, p)),
+            })
+            .collect()
+    }
+}
+
 /// Un fichier CNF pouvant être produit par ce logiciel
 pub struct CNFFile<F = BufWriter<File>> {
     initial: HashSet<Literal>,
@@ -71,15 +84,7 @@ impl<F> CNFFile<F> {
 
 impl<F: Write> CNFFile<F> {
     pub fn new(grid: &Grid, writer: F) -> Self {
-        let initial: HashSet<_> = grid
-            .inner
-            .iter()
-            .enumerate()
-            .filter_map(|(index, cell)| match *cell {
-                Cell::Empty => None,
-                Cell::Filled(p) => Some(Literal::new(index % grid.size, index / grid.size, p)),
-            })
-            .collect();
+        let initial = grid.to_literals();
 
         Self {
             grid_size: grid.size.try_into().unwrap(),
