@@ -1,4 +1,5 @@
-use crate::Grid;
+use crate::{Cell, Grid};
+use std::collections::HashSet;
 use std::convert::TryInto;
 use std::fmt::Display;
 use std::fs::File;
@@ -45,8 +46,22 @@ impl Display for Literal {
     }
 }
 
+impl Grid {
+    pub fn to_literals(&self) -> HashSet<Literal> {
+        self.inner
+            .iter()
+            .enumerate()
+            .filter_map(|(index, cell)| match *cell {
+                Cell::Empty => None,
+                Cell::Filled(p) => Some(Literal::new(index % self.size, index / self.size, p)),
+            })
+            .collect()
+    }
+}
+
 /// Un fichier CNF pouvant être produit par ce logiciel
 pub struct CNFFile<F = BufWriter<File>> {
+    initial: HashSet<Literal>,
     grid_size: NonZeroUsize,
     writer: Option<F>,
     clauses: Vec<Vec<Literal>>,
@@ -54,16 +69,28 @@ pub struct CNFFile<F = BufWriter<File>> {
 
 impl<F> CNFFile<F> {
     pub fn push(&mut self, clause: Vec<Literal>) {
-        self.clauses.push(clause);
+        self.push_multiple(std::iter::once(clause));
+    }
+
+    pub fn push_multiple(&mut self, new_clauses: impl IntoIterator<Item = Vec<Literal>>) {
+        let new_clauses = new_clauses.into_iter();
+
+        let initial = &self.initial;
+
+        self.clauses
+            .extend(new_clauses.filter(|c| !c.iter().any(|l| initial.contains(l))));
     }
 }
 
 impl<F: Write> CNFFile<F> {
     pub fn new(grid: &Grid, writer: F) -> Self {
+        let initial = grid.to_literals();
+
         Self {
             grid_size: grid.size.try_into().unwrap(),
             writer: Some(writer),
-            clauses: Vec::new(),
+            clauses: initial.iter().copied().map(|l| vec![l]).collect(),
+            initial,
         }
     }
 
@@ -73,7 +100,9 @@ impl<F: Write> CNFFile<F> {
             grid_size,
             clauses,
             mut writer,
+            ..
         } = self;
+
         let mut writer = writer.take().unwrap();
 
         writeln!(
