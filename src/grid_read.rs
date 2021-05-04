@@ -47,6 +47,7 @@ pub fn fill_grid_from_file(grid: &mut Grid, content: &str) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Cell;
 
     const BASIC: &str = "2\n01\n11\n";
 
