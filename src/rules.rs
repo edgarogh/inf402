@@ -75,8 +75,8 @@ pub fn write_rule_1<W>(out: &mut CNFFile<W>, grid: &Grid) {
 }
 
 pub fn write_rule_2<W>(out: &mut CNFFile<W>, grid: &Grid) {
-    for x in 0..grid.size - 1 {
-        for y in 0..grid.size - 3 {
+    for x in 0..grid.size {
+        for y in 0..grid.size - 2 {
             out.push(vec![
                 Literal::new(x, y, true),
                 Literal::new(x, y + 1, true),
@@ -89,8 +89,8 @@ pub fn write_rule_2<W>(out: &mut CNFFile<W>, grid: &Grid) {
             ]);
         }
     }
-    for y in 0..grid.size - 1 {
-        for x in 0..grid.size - 3 {
+    for y in 0..grid.size {
+        for x in 0..grid.size - 2 {
             out.push(vec![
                 Literal::new(x, y, true),
                 Literal::new(x + 1, y, true),
@@ -157,7 +157,7 @@ pub fn write_rule_3<W>(out: &mut CNFFile<W>, grid: &Grid) {
         eprint!("\r| substituting and writing... {}/{}", idx, pair_count);
 
         // Assignation de la forme paramétrique `diff_a_b_cnf` aux lignes
-        let mut diff_cnf_l = diff_a_b_cnf.iter().map(|clause| {
+        let diff_cnf_l = diff_a_b_cnf.iter().map(|clause| {
             clause
                 .iter()
                 .map(|lit| match *lit {
@@ -168,7 +168,7 @@ pub fn write_rule_3<W>(out: &mut CNFFile<W>, grid: &Grid) {
         });
 
         // Assignation de la forme paramétrique `diff_a_b_cnf` aux colonnes
-        let mut diff_cnf_h = diff_a_b_cnf.iter().map(|clause| {
+        let diff_cnf_h = diff_a_b_cnf.iter().map(|clause| {
             clause
                 .iter()
                 .map(|lit| match *lit {
