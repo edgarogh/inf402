@@ -1,4 +1,5 @@
 mod cnf;
+mod fuzzing;
 mod grid_read;
 mod logic_utils;
 mod rules;
@@ -18,7 +19,7 @@ pub enum Cell {
     Empty,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Grid {
     size: usize,
     inner: Vec<Cell>,
@@ -183,6 +184,7 @@ fn main() {
         [_, mode, filename] if mode == "sol" => main_sol(filename.into()),
         [_, mode, filename] if mode == "cnf" => main_cnf(filename.into()),
         [_, mode, filename] if mode == "varisat" => main_varisat(filename.into()),
+        [_, mode] if mode == "fuzzing" => fuzzing::main_fuzzing(),
         [exe, _, _] => {
             eprintln!("Mode inconnu.");
             help(exe);
