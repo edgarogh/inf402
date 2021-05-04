@@ -5,6 +5,7 @@ use std::fmt::Display;
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::num::{NonZeroIsize, NonZeroUsize};
+use varisat::{CnfFormula, Lit};
 
 /// Takuzu-focused literal representation, using actual coordinates
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
@@ -123,12 +124,30 @@ impl<F: Write> CNFFile<F> {
     }
 }
 
-impl CNFFile {
-    /// Créer un CNFFile spécifiquement pour l'écriture vers un fichier. Le fichier est
-    /// wrappé/adapté avec un `BufWriter` pour rendre l'écriture plus optimisée en réduisant le
-    /// nombre d'appels système.
-    pub fn from_file(grid: &Grid, file: File) -> Self {
-        Self::new(grid, BufWriter::new(file))
+/// For varisat output
+impl CNFFile<()> {
+    pub fn new_varisat(grid: &Grid) -> Self {
+        let initial = grid.to_literals();
+
+        Self {
+            grid_size: grid.size.try_into().unwrap(),
+            writer: None,
+            clauses: initial.iter().copied().map(|l| vec![l]).collect(),
+            initial,
+        }
+    }
+
+    pub fn into_varisat(self) -> CnfFormula {
+        let Self {
+            grid_size, clauses, ..
+        } = self;
+
+        CnfFormula::from(clauses.into_iter().map(|clause| {
+            clause
+                .into_iter()
+                .map(|lit| Lit::from_dimacs(lit.into_numeric(grid_size.get()).get()))
+                .collect::<Vec<_>>()
+        }))
     }
 }
 

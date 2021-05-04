@@ -10,6 +10,7 @@ use std::env;
 use std::fs::File;
 use std::io::BufWriter;
 use std::path::PathBuf;
+use std::time::Instant;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Cell {
@@ -117,10 +118,60 @@ fn main_sol(filepath: PathBuf) {
     grid.print();
 }
 
+/// Résoud immédiatement la grille avec `varisat`, un SAT-solveur intégré
+fn main_varisat(filepath: PathBuf) {
+    eprintln!("lecture de la grille {:?}", filepath);
+    let content: String = grid_read::file_read(filepath);
+    let grid_size: usize = grid_read::size(&content)
+        .trim()
+        .parse()
+        .expect("Taille incorrecte dans le fichier");
+
+    let mut grid: Grid = Grid::new(grid_size);
+    grid_read::fill_grid_from_file(&mut grid, &content);
+
+    let mut output = CNFFile::new_varisat(&grid);
+    rules::write_all(&mut output, &grid);
+    let output = output.into_varisat();
+
+    let mut solver = varisat::Solver::new();
+    solver.add_formula(&output);
+
+    eprintln!("[varisat] solving");
+    let instant_solving = Instant::now();
+    let model = match solver.solve() {
+        Ok(true) => {
+            eprintln!("\\ DONE ({:?})", instant_solving.elapsed());
+            solver.model().unwrap()
+        }
+        Ok(false) => {
+            eprintln!("\\ ERROR: unsat");
+            return;
+        }
+        Err(err) => {
+            eprintln!("\\ ERROR: {}", err);
+            return;
+        }
+    };
+
+    match Grid::try_from(
+        model
+            .into_iter()
+            .map(|lit| Cell::Filled(lit.is_positive()))
+            .collect::<Vec<_>>(),
+    ) {
+        Ok(grid) => {
+            eprintln!("grille: ");
+            grid.print();
+        }
+        Err(()) => unreachable!("invalid model"),
+    }
+}
+
 /// exe: nom de l'exécutable pour le message d'aide
 fn help(exe: &str) {
     eprintln!(
-        "Usage: `{0} sol <fichier.takuzu>` ou `{0} cnf <fichier.resultat>`",
+        "Usage: `{0} sol <fichier.takuzu>`\n    ou `{0} cnf <fichier.resultat>\n    ou `{0} varisat <fichier.takuzu>`",
         exe,
     );
 }
@@ -131,6 +182,7 @@ fn main() {
     match args.as_slice() {
         [_, mode, filename] if mode == "sol" => main_sol(filename.into()),
         [_, mode, filename] if mode == "cnf" => main_cnf(filename.into()),
+        [_, mode, filename] if mode == "varisat" => main_varisat(filename.into()),
         [exe, _, _] => {
             eprintln!("Mode inconnu.");
             help(exe);
