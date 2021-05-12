@@ -1,0 +1,17 @@
+@use crate::templates::base;
+
+@(base_url: &str, ad: Option<&str>, input: &str, solution: &str, duration: &str)
+
+@:base(base_url, ad, {
+<div class="mb-3 row">
+    <div class="col-6">
+        <label for="input-grid" class="form-label">Votre grille</label>
+        <textarea id="input-grid" class="form-control" rows="10" name="grid" disabled aria-describedby="input-grid-help">@input</textarea>
+    </div>
+    <div class="col-6">
+        <label for="input-solution" class="form-label">Notre solution</label>
+        <textarea id="input-solution" class="form-control" rows="10" name="grid" disabled aria-describedby="input-solution-help">@solution</textarea>
+        <div id="input-solution-help" class="form-text">Trouvée en @duration.</div>
+    </div>
+</div>
+})

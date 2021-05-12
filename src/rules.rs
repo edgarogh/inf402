@@ -41,7 +41,7 @@ fn combinations<T>(list: &[T], r: usize) -> Vec<Vec<&T>> {
     }
 }
 
-pub fn write_rule_1<W>(out: &mut CNFFile<W>, grid: &Grid) {
+pub fn write_rule_1(out: &mut CNFFile, grid: &Grid) {
     for k in 0..grid.size {
         let row_or_line: Vec<_> = std::iter::repeat(k).enumerate().take(grid.size).collect();
 
@@ -74,7 +74,7 @@ pub fn write_rule_1<W>(out: &mut CNFFile<W>, grid: &Grid) {
     }
 }
 
-pub fn write_rule_2<W>(out: &mut CNFFile<W>, grid: &Grid) {
+pub fn write_rule_2(out: &mut CNFFile, grid: &Grid) {
     for x in 0..grid.size {
         for y in 0..grid.size - 2 {
             out.push(vec![
@@ -117,7 +117,7 @@ fn pairs<T>(slice: &[T]) -> impl Iterator<Item = (&T, &T)> {
         .flatten()
 }
 
-pub fn write_rule_3<W>(out: &mut CNFFile<W>, grid: &Grid) {
+pub fn write_rule_3(out: &mut CNFFile, grid: &Grid) {
     #[derive(Clone, Copy, Eq, PartialEq, Hash)]
     enum ParamLiteral {
         A(usize, bool),
@@ -186,17 +186,18 @@ pub fn write_rule_3<W>(out: &mut CNFFile<W>, grid: &Grid) {
     );
 }
 
-pub fn write_all<W>(out: &mut CNFFile<W>, grid: &Grid) {
-    let mut run_rule = |rule: fn(&mut CNFFile<W>, &Grid), no: u8| {
+pub fn write_all(out: &mut CNFFile, grid: &Grid) {
+    let run_rule = |out: &mut CNFFile, rule: fn(&mut CNFFile, &Grid), no: u8| {
         eprintln!("[rule {}] starting rule", no);
         let start = Instant::now();
         rule(out, grid);
         eprintln!("\\ DONE ({:?})", start.elapsed());
     };
 
-    run_rule(write_rule_1, 1);
-    run_rule(write_rule_2, 2);
-    run_rule(write_rule_3, 3);
+    run_rule(out, write_rule_1, 1);
+    run_rule(out, write_rule_2, 2);
+    out.solve().unwrap();
+    run_rule(out, write_rule_3, 3);
 }
 
 #[cfg(test)]

@@ -1,0 +1,43 @@
+textarea {
+    font-family: monospace;
+}
+
+.ad {
+    display: inline-block;
+    position: relative;
+    cursor: pointer;
+}
+
+.ad .btns {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.ad .btns:hover {
+    display: none;
+}
+
+#gnome {
+    display: none;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+}
+
+#gnome.playing {
+    display: block;
+}
+
+.gh-link > svg path {
+    fill: white;
+}
+
+.gh-link:hover > svg path {
+    opacity: .8;
+}

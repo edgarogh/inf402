@@ -1,21 +1,32 @@
+#![feature(proc_macro_hygiene, decl_macro, once_cell)]
+
+#[macro_use]
+extern crate rocket;
+
+use std::convert::TryFrom;
+use std::env;
+use std::fmt::{Display, Formatter};
+
 mod cnf;
 mod grid_read;
 mod logic_utils;
 mod rules;
-mod sat;
-
-use crate::cnf::CNFFile;
-use std::convert::TryFrom;
-use std::env;
-use std::fs::File;
-use std::io::BufWriter;
-use std::path::PathBuf;
-use std::time::Instant;
+mod web;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Cell {
     Filled(bool),
     Empty,
+}
+
+impl Cell {
+    pub fn to_char(self) -> char {
+        match self {
+            Self::Filled(false) => '0',
+            Self::Filled(true) => '1',
+            Self::Empty => '.',
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -44,19 +55,23 @@ impl Grid {
         let i = y * self.size + x;
         self.inner[i] = Cell::Filled(value);
     }
+}
 
-    pub fn print(&self) {
+impl Display for Grid {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for y in 0..self.size {
             for x in 0..self.size {
                 let c = self.get(x, y);
                 match c {
-                    Cell::Filled(true) => print!("1"),
-                    Cell::Filled(false) => print!("0"),
-                    Cell::Empty => print!("."),
+                    Cell::Filled(true) => write!(f, "1")?,
+                    Cell::Filled(false) => write!(f, "0")?,
+                    Cell::Empty => write!(f, ".")?,
                 }
             }
-            println!();
+            writeln!(f)?;
         }
+
+        Ok(())
     }
 }
 
@@ -93,112 +108,13 @@ impl TryFrom<Vec<Cell>> for Grid {
     }
 }
 
-fn main_cnf(filepath: PathBuf) {
-    eprintln!("lecture de la grille {:?}", filepath);
-    let content: String = grid_read::file_read(filepath);
-    let grid_size: usize = grid_read::size(&content)
-        .trim()
-        .parse()
-        .expect("Taille incorrecte dans le fichier");
-
-    let mut grid: Grid = Grid::new(grid_size);
-    grid_read::fill_grid_from_file(&mut grid, &content);
-
-    let stdout = std::io::stdout();
-    let mut output = CNFFile::new(&grid, BufWriter::new(stdout.lock()));
-    rules::write_all(&mut output, &grid);
-    output.save().unwrap();
-}
-
-fn main_sol(filepath: PathBuf) {
-    eprintln!("lecture du fichier de résultats: {:?}", filepath);
-    let file = std::io::BufReader::new(File::open(filepath).unwrap());
-    let grid = sat::read_sat_file(file).unwrap();
-    eprintln!("grille: ");
-    grid.print();
-}
-
-/// Résoud immédiatement la grille avec `varisat`, un SAT-solveur intégré
-fn main_varisat(filepath: PathBuf) {
-    eprintln!("lecture de la grille {:?}", filepath);
-    let content: String = grid_read::file_read(filepath);
-    let grid_size: usize = grid_read::size(&content)
-        .trim()
-        .parse()
-        .expect("Taille incorrecte dans le fichier");
-
-    let mut grid: Grid = Grid::new(grid_size);
-    grid_read::fill_grid_from_file(&mut grid, &content);
-
-    let mut output = CNFFile::new_varisat(&grid);
-    rules::write_all(&mut output, &grid);
-    let output = output.into_varisat();
-
-    let mut solver = varisat::Solver::new();
-    solver.add_formula(&output);
-
-    eprintln!("[varisat] solving");
-    let instant_solving = Instant::now();
-    let model = match solver.solve() {
-        Ok(true) => {
-            eprintln!("\\ DONE ({:?})", instant_solving.elapsed());
-            solver.model().unwrap()
-        }
-        Ok(false) => {
-            eprintln!("\\ ERROR: unsat");
-            return;
-        }
-        Err(err) => {
-            eprintln!("\\ ERROR: {}", err);
-            return;
-        }
-    };
-
-    match Grid::try_from(
-        model
-            .into_iter()
-            .map(|lit| Cell::Filled(lit.is_positive()))
-            .collect::<Vec<_>>(),
-    ) {
-        Ok(grid) => {
-            eprintln!("grille: ");
-            grid.print();
-        }
-        Err(()) => unreachable!("invalid model"),
-    }
-}
-
-/// exe: nom de l'exécutable pour le message d'aide
-fn help(exe: &str) {
-    eprintln!(
-        "Usage: `{0} sol <fichier.takuzu>`\n    ou `{0} cnf <fichier.resultat>\n    ou `{0} varisat <fichier.takuzu>`",
-        exe,
-    );
-}
-
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    match args.as_slice() {
-        [_, mode, filename] if mode == "sol" => main_sol(filename.into()),
-        [_, mode, filename] if mode == "cnf" => main_cnf(filename.into()),
-        [_, mode, filename] if mode == "varisat" => main_varisat(filename.into()),
-        [exe, _, _] => {
-            eprintln!("Mode inconnu.");
-            help(exe);
-            return;
-        }
-        [exe] => {
-            eprintln!("Deux arguments attendus.");
-            help(exe);
-            return;
-        }
-        _ => {
-            eprintln!("Deux arguments attendus.");
-            return;
-        }
-    }
+    web::main_rocket(args.get(1).cloned().unwrap_or_default());
 }
+
+include!(concat!(env!("OUT_DIR"), "/templates.rs"));
 
 #[cfg(test)]
 mod tests {

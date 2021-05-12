@@ -1,0 +1,34 @@
+@use crate::templates::base;
+
+@(base_url: &str, ad: Option<&str>, grid_ids: &[u32], value: &str)
+
+@:base(base_url, ad, {
+<form action="./solution" method="post" xmlns="http://www.w3.org/1999/html">
+    <div class="mb-3">
+        <label for="input-grid" class="form-label">Entrez votre grille à résoudre</label>
+        <textarea required id="input-grid" class="form-control" rows="10" name="grid" placeholder="// Exemple:
+4
+.1.0
+..0.
+.0..
+11.0" aria-describedby="input-grid-help">@value</textarea>
+        <div id="input-grid-help" class="form-text">Entrez une grille au format des fichiers `.grd`.</div>
+    </div>
+    <div class="row justify-content-around align-items-center">
+        <div data-nosnippet class="col-auto">
+            <div class="btn-group" role="group" aria-label="Charger des grilles depuis 20Minutes">
+                …ou charger:&nbsp;
+                @for id in grid_ids {
+                    <a href="@base_url/?id=@id" title="Charger la grille @id de 20Minutes.fr">#@id</a>&ensp;
+                }
+            </div>
+        </div>
+        <div class="col-auto btn-group">
+            <button type="submit" class="btn btn-primary">Résoudre</button>
+            @if ad.is_some() {
+            <button type="button" onclick="gnome(this)" class="btn btn-success">Acheter Premium</button>
+            }
+        </div>
+    </div>
+</form>
+})
