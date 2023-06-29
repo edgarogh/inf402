@@ -20,14 +20,14 @@ use std::time::Instant;
 use tokio::sync::Mutex;
 
 #[get("/?<id>")]
-fn index(
+async fn index(
     base_url: &State<String>,
-    ads: Option<AdProvider>,
+    ads: Option<AdProvider<'_>>,
     id: Option<u32>,
 ) -> Result<RawHtml<Vec<u8>>, String> {
     let value = match id {
         Some(id) => {
-            let grid = fetch(id)?.0;
+            let grid = fetch(id).await?.0;
 
             let mut out = String::with_capacity(grid.size.pow(2));
             writeln!(out, "{}", grid.size).unwrap();
@@ -42,7 +42,7 @@ fn index(
         None => None,
     };
 
-    let sample = || (0u32..1884).sample_single(&mut rand::thread_rng());
+    let sample = || (2001u32..=2669).sample_single(&mut rand::thread_rng());
 
     let ad = ads.as_ref().and_then(AdProvider::name);
 

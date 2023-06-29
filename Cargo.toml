@@ -6,7 +6,7 @@ edition = "2021"
 
 [dependencies]
 rand = "0.8.5"
-reqwest = { version = "0.11.18", features = ["blocking"] }
+reqwest = "0.11.18"
 rocket = "0.5.0-rc.3"
 ructe = "0.16"
 tokio = "1.29"

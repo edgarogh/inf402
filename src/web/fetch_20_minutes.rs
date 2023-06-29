@@ -1,4 +1,5 @@
 use crate::{Cell, Grid};
+use reqwest::StatusCode;
 use std::convert::TryFrom;
 
 fn parse_grid(grid: &str) -> Result<Grid, String> {
@@ -15,11 +16,14 @@ fn parse_grid(grid: &str) -> Result<Grid, String> {
     .map_err(|()| String::from("invalid grid size"))
 }
 
-pub fn fetch(id: u32) -> Result<(Grid, Grid), String> {
+pub async fn fetch(id: u32) -> Result<(Grid, Grid), String> {
     let url = format!("https://rcijeux.fr/drupal_game/20minutes/takuzu/grids/{id}.takj");
 
-    let res = match reqwest::blocking::get(url) {
-        Ok(response) => response.text().unwrap_or_default(),
+    let res = match reqwest::get(url).await {
+        Ok(response) if response.status() == StatusCode::NOT_FOUND => {
+            return Err(String::from("grid not found"))
+        }
+        Ok(response) => response.text().await.unwrap_or_default(),
         Err(err) => return Err(format!("{err}")),
     };
 
