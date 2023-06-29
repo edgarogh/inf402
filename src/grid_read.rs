@@ -3,8 +3,7 @@ use std::fs;
 use std::path::PathBuf;
 
 pub fn file_read(filepath: PathBuf) -> String {
-    let content = fs::read_to_string(filepath).expect("Problème lors de la lecture de la grille");
-    content
+    fs::read_to_string(filepath).expect("Problème lors de la lecture de la grille")
 }
 
 pub fn size(content: &str) -> &str {
@@ -26,7 +25,7 @@ pub fn fill_grid_from_file(grid: &mut Grid, content: &str) {
 
     for &element in bytes.iter() {
         if element == b'\n' {
-            if s == false {
+            if !s {
                 s = true;
             }
         } else if s {

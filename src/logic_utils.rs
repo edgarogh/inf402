@@ -9,31 +9,30 @@ fn dnf_to_cnf_rec<'a, F: 'a + Copy + Eq + Hash>(
     let con_clause = dnf.next().expect("unimplemented: empty dnf");
 
     let con_clause_as_cnf: Vec<_> = con_clause
-        .into_iter()
+        .iter()
         .map(|lit| HashSet::from_iter(std::iter::once(lit).copied()))
         .collect();
 
     dnf.fold(con_clause_as_cnf, |acc, con_clause| {
         acc.into_iter()
-            .map(|clause| {
+            .flat_map(|clause| {
                 let clause = Rc::new(clause);
 
                 con_clause
-                    .into_iter()
+                    .iter()
                     .map(|lit| HashSet::from_iter(std::iter::once(lit).copied()))
                     .zip(std::iter::repeat(clause))
                     .map(|(mut new_clause, clause)| {
-                        new_clause.extend(clause.iter().cloned());
+                        new_clause.extend(clause.iter().copied());
                         new_clause
                     })
             })
-            .flatten()
             .collect()
     })
 }
 
 pub fn dnf_to_cnf<F: Copy + Eq + Hash>(dnf: &[&[F]]) -> Vec<HashSet<F>> {
-    dnf_to_cnf_rec(dnf.into_iter().copied())
+    dnf_to_cnf_rec(dnf.iter().copied())
 }
 
 #[cfg(test)]

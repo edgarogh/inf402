@@ -50,7 +50,7 @@ fn create_grid(model: &str) -> Result<Grid, Error> {
 /// formats:
 ///   - MiniSAT
 ///   - Varisat
-///   - http://www.satcompetition.org/2004/format-solvers2004.html
+///   - <http://www.satcompetition.org/2004/format-solvers2004.html>
 pub fn read_sat_file(reader: impl BufRead) -> Result<Grid, Error> {
     for line in reader.lines() {
         let line = line.unwrap();

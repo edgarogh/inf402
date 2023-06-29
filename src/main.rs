@@ -94,7 +94,7 @@ impl TryFrom<Vec<Cell>> for Grid {
 }
 
 fn main_cnf(filepath: PathBuf) {
-    eprintln!("lecture de la grille {:?}", filepath);
+    eprintln!("lecture de la grille {filepath:?}");
     let content: String = grid_read::file_read(filepath);
     let grid_size: usize = grid_read::size(&content)
         .trim()
@@ -111,7 +111,7 @@ fn main_cnf(filepath: PathBuf) {
 }
 
 fn main_sol(filepath: PathBuf) {
-    eprintln!("lecture du fichier de résultats: {:?}", filepath);
+    eprintln!("lecture du fichier de résultats: {filepath:?}");
     let file = std::io::BufReader::new(File::open(filepath).unwrap());
     let grid = sat::read_sat_file(file).unwrap();
     eprintln!("grille: ");
@@ -120,7 +120,7 @@ fn main_sol(filepath: PathBuf) {
 
 /// Résoud immédiatement la grille avec `varisat`, un SAT-solveur intégré
 fn main_varisat(filepath: PathBuf) {
-    eprintln!("lecture de la grille {:?}", filepath);
+    eprintln!("lecture de la grille {filepath:?}");
     let content: String = grid_read::file_read(filepath);
     let grid_size: usize = grid_read::size(&content)
         .trim()
@@ -149,7 +149,7 @@ fn main_varisat(filepath: PathBuf) {
             return;
         }
         Err(err) => {
-            eprintln!("\\ ERROR: {}", err);
+            eprintln!("\\ ERROR: {err}");
             return;
         }
     };
@@ -186,16 +186,13 @@ fn main() {
         [exe, _, _] => {
             eprintln!("Mode inconnu.");
             help(exe);
-            return;
         }
         [exe] => {
             eprintln!("Deux arguments attendus.");
             help(exe);
-            return;
         }
         _ => {
             eprintln!("Deux arguments attendus.");
-            return;
         }
     }
 }
