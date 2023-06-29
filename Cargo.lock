@@ -545,11 +545,11 @@ dependencies = [
 name = "inf402-takuzu"
 version = "0.1.0"
 dependencies = [
- "once_cell",
  "rand",
  "reqwest",
  "rocket",
  "ructe",
+ "tokio",
  "varisat",
 ]
 

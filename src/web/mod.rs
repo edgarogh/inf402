@@ -7,7 +7,6 @@ use crate::templates;
 use crate::web::ads_provider::{get_ads_routes, AdProvider};
 use crate::{Cell, Grid};
 use fetch_20_minutes::fetch;
-use once_cell::sync::Lazy;
 use rand::distributions::uniform::SampleRange;
 use rocket::form::Form;
 use rocket::fs::FileServer;
@@ -17,8 +16,8 @@ use rocket::response::Redirect;
 use rocket::{Build, Rocket, State};
 use std::convert::TryFrom;
 use std::fmt::Write;
-use std::sync::Mutex;
 use std::time::Instant;
+use tokio::sync::Mutex;
 
 #[get("/?<id>")]
 fn index(
@@ -45,13 +44,13 @@ fn index(
 
     let sample = || (0u32..1884).sample_single(&mut rand::thread_rng());
 
-    let ad = ads.and_then(|ads| ads.get());
+    let ad = ads.as_ref().and_then(AdProvider::name);
 
     let mut out = Vec::new();
     templates::index_html(
         &mut out,
         base_url.inner(),
-        ad.as_deref(),
+        ad,
         &[sample(), sample(), sample()],
         value.as_deref().unwrap_or_default(),
     )
@@ -60,20 +59,19 @@ fn index(
     Ok(RawHtml(out))
 }
 
-static LOAD_LOCK: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
-
 #[derive(FromForm)]
 struct SolutionForm {
     grid: String,
 }
 
 #[post("/solution", data = "<form>")]
-fn solution(
+async fn solution(
     base_url: &State<String>,
-    ads: Option<AdProvider>,
+    ads: Option<AdProvider<'_>>,
     form: Form<SolutionForm>,
+    load_lock: &State<Mutex<()>>,
 ) -> Result<RawHtml<Vec<u8>>, String> {
-    let guard = LOAD_LOCK.lock().unwrap();
+    let guard = load_lock.lock().await;
 
     let grid = {
         let grid_size: usize = match crate::grid_read::size(&form.grid) {
@@ -88,15 +86,27 @@ fn solution(
     };
 
     let start = Instant::now();
-    let mut output = CNFFile::new_varisat(&grid);
-    crate::rules::write_all(&mut output, &grid);
 
-    let model = match output.solve() {
-        Ok(true) => {
-            // eprintln!("\\ DONE ({:?})", instant_solving.elapsed());
-            output.model().unwrap()
-        }
-        Ok(false) => {
+    // TODO: this isn't cancellable
+    let solution = tokio::task::spawn_blocking(move || {
+        let mut output = CNFFile::new_varisat(&grid);
+        crate::rules::write_all(&mut output, &grid);
+        output.solve().map(|success| {
+            if success {
+                Some(output.model().unwrap())
+            } else {
+                None
+            }
+        })
+    })
+    .await
+    .unwrap();
+
+    println!("solution");
+
+    let model = match solution {
+        Ok(Some(model)) => model,
+        Ok(None) => {
             return Err(String::from("ERROR: unsat"));
         }
         Err(err) => {
@@ -113,13 +123,13 @@ fn solution(
             .collect::<Vec<_>>(),
     ) {
         Ok(grid) => {
-            let ad = ads.and_then(|ads| ads.get());
+            let ad = ads.as_ref().and_then(AdProvider::name);
 
             let mut out = Vec::new();
             templates::solution_html(
                 &mut out,
                 base_url.inner(),
-                ad.as_deref(),
+                ad,
                 &form.grid,
                 &format!("{}\n{}", grid.size, grid),
                 &format!("{:?}", start.elapsed()),
@@ -144,7 +154,9 @@ pub fn ads(base_url: &State<String>, cookies: &CookieJar) -> Redirect {
 
 pub fn main_rocket(base_url: String) -> Rocket<Build> {
     rocket::build()
+        .attach(AdProvider::fairing())
         .manage(base_url)
+        .manage(Mutex::new(()))
         .mount("/", routes![index, solution, ads])
         .mount("/static", FileServer::from("src/static"))
         .mount("/gnome", FileServer::from("gnome"))
