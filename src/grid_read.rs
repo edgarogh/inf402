@@ -1,5 +1,11 @@
 use crate::Grid;
+use std::fs;
 use std::num::NonZeroUsize;
+use std::path::PathBuf;
+
+pub fn file_read(filepath: PathBuf) -> String {
+    fs::read_to_string(filepath).expect("Problème lors de la lecture de la grille")
+}
 
 pub fn size(content: &str) -> Option<NonZeroUsize> {
     content.lines().next().and_then(|l| l.parse().ok())
@@ -13,7 +19,7 @@ pub fn fill_grid_from_file(grid: &mut Grid, content: &str) {
 
     for &element in bytes.iter().filter(|c| **c != b'\r') {
         if element == b'\n' {
-            if s == false {
+            if !s {
                 s = true;
             }
         } else if s {

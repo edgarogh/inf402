@@ -1,5 +1,3 @@
-#![feature(proc_macro_hygiene, decl_macro, once_cell)]
-
 #[macro_use]
 extern crate rocket;
 
@@ -108,10 +106,11 @@ impl TryFrom<Vec<Cell>> for Grid {
     }
 }
 
-fn main() {
+#[rocket::launch]
+fn launch() -> _ {
     let args: Vec<String> = env::args().collect();
 
-    web::main_rocket(args.get(1).cloned().unwrap_or_default());
+    web::main_rocket(args.get(1).cloned().unwrap_or_default())
 }
 
 include!(concat!(env!("OUT_DIR"), "/templates.rs"));

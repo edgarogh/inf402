@@ -1,21 +1,22 @@
-use rocket::http::Status;
+use rocket::fs::FileServer;
+use rocket::http::{Cookie, Status};
 use rocket::request::{FromRequest, Outcome};
 use rocket::Request;
-use rocket_contrib::serve::StaticFiles;
 
 const PATH: &str = "ads/";
 
-pub fn get_ads_routes() -> StaticFiles {
-    StaticFiles::from(PATH)
+pub fn get_ads_routes() -> FileServer {
+    FileServer::from(PATH)
 }
 
 pub struct AdProvider([(); 0]);
 
 impl AdProvider {
+    #[allow(clippy::unused_self)]
     pub fn get(&self) -> Option<String> {
         let all: Vec<_> = std::fs::read_dir(PATH)
             .ok()?
-            .filter_map(|e| e.ok())
+            .filter_map(Result::ok)
             .map(|e| e.file_name().to_string_lossy().to_string())
             .collect();
 
@@ -29,13 +30,14 @@ pub enum Error {
     Unauthorized,
 }
 
-impl<'a, 'r> FromRequest<'a, 'r> for AdProvider {
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for AdProvider {
     type Error = Error;
 
-    fn from_request(request: &'a Request<'r>) -> Outcome<Self, Self::Error> {
+    async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         let cookies = request.cookies();
         let cookie = cookies.get("ads");
-        if let Some("yes") = cookie.map(|c| c.value()) {
+        if let Some("yes") = cookie.map(Cookie::value) {
             Outcome::Success(AdProvider([]))
         } else {
             Outcome::Failure((Status::Unauthorized, Error::Unauthorized))

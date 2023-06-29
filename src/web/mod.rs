@@ -1,19 +1,20 @@
-mod ads;
+#[path = "ads.rs"]
+mod ads_provider;
 mod fetch_20_minutes;
 
 use crate::cnf::CNFFile;
 use crate::templates;
-use crate::web::ads::{get_ads_routes, AdProvider};
+use crate::web::ads_provider::{get_ads_routes, AdProvider};
 use crate::{Cell, Grid};
 use fetch_20_minutes::fetch;
 use once_cell::sync::Lazy;
 use rand::distributions::uniform::SampleRange;
-use rocket::http::{Cookie, Cookies};
-use rocket::request::Form;
-use rocket::response::content::Html;
+use rocket::form::Form;
+use rocket::fs::FileServer;
+use rocket::http::{Cookie, CookieJar};
+use rocket::response::content::RawHtml;
 use rocket::response::Redirect;
-use rocket::State;
-use rocket_contrib::serve::StaticFiles;
+use rocket::{Build, Rocket, State};
 use std::convert::TryFrom;
 use std::fmt::Write;
 use std::sync::Mutex;
@@ -21,10 +22,10 @@ use std::time::Instant;
 
 #[get("/?<id>")]
 fn index(
-    base_url: State<String>,
+    base_url: &State<String>,
     ads: Option<AdProvider>,
     id: Option<u32>,
-) -> Result<Html<Vec<u8>>, String> {
+) -> Result<RawHtml<Vec<u8>>, String> {
     let value = match id {
         Some(id) => {
             let grid = fetch(id)?.0;
@@ -35,7 +36,7 @@ fn index(
                 for x in 0..grid.size {
                     out.push(grid.get(x, y).to_char());
                 }
-                out.push('\n')
+                out.push('\n');
             }
             Some(out)
         }
@@ -47,7 +48,7 @@ fn index(
     let ad = ads.and_then(|ads| ads.get());
 
     let mut out = Vec::new();
-    templates::index(
+    templates::index_html(
         &mut out,
         base_url.inner(),
         ad.as_deref(),
@@ -56,7 +57,7 @@ fn index(
     )
     .unwrap();
 
-    Ok(Html(out))
+    Ok(RawHtml(out))
 }
 
 static LOAD_LOCK: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
@@ -68,10 +69,10 @@ struct SolutionForm {
 
 #[post("/solution", data = "<form>")]
 fn solution(
-    base_url: State<String>,
+    base_url: &State<String>,
     ads: Option<AdProvider>,
     form: Form<SolutionForm>,
-) -> Result<Html<Vec<u8>>, String> {
+) -> Result<RawHtml<Vec<u8>>, String> {
     let guard = LOAD_LOCK.lock().unwrap();
 
     let grid = {
@@ -99,7 +100,7 @@ fn solution(
             return Err(String::from("ERROR: unsat"));
         }
         Err(err) => {
-            return Err(format!("ERROR: {}", err));
+            return Err(format!("ERROR: {err}"));
         }
     };
 
@@ -115,7 +116,7 @@ fn solution(
             let ad = ads.and_then(|ads| ads.get());
 
             let mut out = Vec::new();
-            templates::solution(
+            templates::solution_html(
                 &mut out,
                 base_url.inner(),
                 ad.as_deref(),
@@ -124,16 +125,16 @@ fn solution(
                 &format!("{:?}", start.elapsed()),
             )
             .unwrap();
-            Ok(Html(out))
+            Ok(RawHtml(out))
         }
         Err(()) => unreachable!("invalid model"),
     }
 }
 
 #[get("/ads")]
-pub fn ads(base_url: State<String>, mut cookies: Cookies) -> Redirect {
+pub fn ads(base_url: &State<String>, cookies: &CookieJar) -> Redirect {
     cookies.add(Cookie::new("ads", "yes"));
-    let base_url = base_url.clone();
+    let base_url = base_url.inner().clone();
     Redirect::to(if base_url.is_empty() {
         "/".into()
     } else {
@@ -141,12 +142,11 @@ pub fn ads(base_url: State<String>, mut cookies: Cookies) -> Redirect {
     })
 }
 
-pub fn main_rocket(base_url: String) {
-    rocket::ignite()
+pub fn main_rocket(base_url: String) -> Rocket<Build> {
+    rocket::build()
         .manage(base_url)
         .mount("/", routes![index, solution, ads])
-        .mount("/static", StaticFiles::from("src/static"))
-        .mount("/gnome", StaticFiles::from("gnome"))
+        .mount("/static", FileServer::from("src/static"))
+        .mount("/gnome", FileServer::from("gnome"))
         .mount("/ads", get_ads_routes())
-        .launch();
 }

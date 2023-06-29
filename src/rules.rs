@@ -3,7 +3,7 @@ use crate::logic_utils::dnf_to_cnf;
 use crate::Grid;
 use std::time::Instant;
 
-/// Credits: https://docs.python.org/3.9/library/itertools.html#itertools.combinations
+/// Credits: <https://docs.python.org/3.9/library/itertools.html#itertools.combinations>
 fn combinations<T>(list: &[T], r: usize) -> Vec<Vec<&T>> {
     let n = list.len();
     if r > n {
@@ -12,7 +12,7 @@ fn combinations<T>(list: &[T], r: usize) -> Vec<Vec<&T>> {
 
     let mut ret: Vec<Vec<&T>> = Vec::new();
 
-    ret.push(list[..r].into_iter().collect());
+    ret.push(list[..r].iter().collect());
     let mut indices: Vec<_> = (0..r).collect();
 
     loop {
@@ -25,19 +25,17 @@ fn combinations<T>(list: &[T], r: usize) -> Vec<Vec<&T>> {
             }
         }
 
-        let i = if let Some(i) = broken {
-            i
-        } else {
+        let Some(i) = broken else {
             return ret;
         };
 
         indices[i] += 1;
 
         for j in (i + 1)..r {
-            indices[j] = indices[j - 1] + 1
+            indices[j] = indices[j - 1] + 1;
         }
 
-        ret.push(indices.iter().map(|i| &list[*i]).collect())
+        ret.push(indices.iter().map(|i| &list[*i]).collect());
     }
 }
 
@@ -112,9 +110,8 @@ fn pairs<T>(slice: &[T]) -> impl Iterator<Item = (&T, &T)> {
         .take(slice.len())
         .enumerate()
         .map(|(idx, slice)| &slice[idx..])
-        .filter_map(|slice| slice.split_first())
-        .map(|(first, seconds)| std::iter::repeat(first).zip(seconds))
-        .flatten()
+        .filter_map(<[T]>::split_first)
+        .flat_map(|(first, seconds)| std::iter::repeat(first).zip(seconds))
 }
 
 pub fn write_rule_3(out: &mut CNFFile, grid: &Grid) {
@@ -126,13 +123,12 @@ pub fn write_rule_3(out: &mut CNFFile, grid: &Grid) {
 
     // « Une ligne/colonne A est différente d'une ligne/colonne B » en FND (paramétrique)
     let diff_a_b_dnf = (0..grid.size)
-        .map(|z| {
+        .flat_map(|z| {
             vec![
                 [ParamLiteral::A(z, true), ParamLiteral::B(z, false)],
                 [ParamLiteral::A(z, false), ParamLiteral::B(z, true)],
             ]
         })
-        .flatten()
         .collect::<Box<[_]>>();
 
     // ... en FNC
@@ -154,7 +150,7 @@ pub fn write_rule_3(out: &mut CNFFile, grid: &Grid) {
     for (idx, (a, b)) in pairs(&indices).enumerate() {
         let (a, b) = (*a, *b);
 
-        eprint!("\r| substituting and writing... {}/{}", idx, pair_count);
+        eprint!("\r| substituting and writing... {idx}/{pair_count}");
 
         // Assignation de la forme paramétrique `diff_a_b_cnf` aux lignes
         let diff_cnf_l = diff_a_b_cnf.iter().map(|clause| {
@@ -188,7 +184,7 @@ pub fn write_rule_3(out: &mut CNFFile, grid: &Grid) {
 
 pub fn write_all(out: &mut CNFFile, grid: &Grid) {
     let run_rule = |out: &mut CNFFile, rule: fn(&mut CNFFile, &Grid), no: u8| {
-        eprintln!("[rule {}] starting rule", no);
+        eprintln!("[rule {no}] starting rule");
         let start = Instant::now();
         rule(out, grid);
         eprintln!("\\ DONE ({:?})", start.elapsed());

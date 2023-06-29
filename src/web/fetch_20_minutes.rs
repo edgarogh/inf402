@@ -16,25 +16,22 @@ fn parse_grid(grid: &str) -> Result<Grid, String> {
 }
 
 pub fn fetch(id: u32) -> Result<(Grid, Grid), String> {
-    let url = format!(
-        "https://rcijeux.fr/drupal_game/20minutes/takuzu/grids/{}.takj",
-        id,
-    );
+    let url = format!("https://rcijeux.fr/drupal_game/20minutes/takuzu/grids/{id}.takj");
 
     let res = match reqwest::blocking::get(url) {
         Ok(response) => response.text().unwrap_or_default(),
-        Err(err) => return Err(format!("{}", err)),
+        Err(err) => return Err(format!("{err}")),
     };
 
     let (mut start, mut sol) = (None, None);
 
     for line in res.lines() {
         if let Some(grid) = line.strip_prefix("grille:\"") {
-            start = Some(parse_grid(grid))
+            start = Some(parse_grid(grid));
         }
 
         if let Some(grid) = line.strip_prefix("solution:\"") {
-            sol = Some(parse_grid(grid))
+            sol = Some(parse_grid(grid));
         }
     }
 

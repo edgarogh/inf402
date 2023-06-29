@@ -90,7 +90,7 @@ impl CNFFile<'_> {
             s.assume(
                 &initial
                     .iter()
-                    .cloned()
+                    .copied()
                     .map(|l| l.into_lit(grid.size))
                     .collect::<Vec<_>>(),
             );
@@ -106,7 +106,7 @@ impl CNFFile<'_> {
 
     pub fn push(&mut self, clause: Vec<Literal>) {
         self.solver
-            .add_clause(&literal_to_lits(&clause, self.grid_size.get()));
+            .add_clause(&literal_to_lits(clause, self.grid_size.get()));
     }
 
     pub fn push_multiple(&mut self, new_clauses: impl IntoIterator<Item = Vec<Literal>>) {
